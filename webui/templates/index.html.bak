@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT2PRISM - 可视化转换工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
+        }
+
+        select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .editor-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            color: #2d3748;
+            font-size: 18px;
+        }
+
+        .panel-header .stats {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .output-area {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            overflow: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .messages {
+            padding: 15px 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 2px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .message {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .message-error {
+            background: #fed7d7;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        .message-warning {
+            background: #feebc8;
+            color: #c05621;
+            border-left: 4px solid #ed8936;
+        }
+
+        .message-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .prism-keyword { color: #c586c0; }
+        .prism-comment { color: #6a9955; }
+        .prism-number { color: #b5cea8; }
+        .prism-string { color: #ce9178; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 PAT2PRISM 可视化转换工具</h1>
+            <p>增强版 - 支持消息字段提取、同步标签生成、智能类型推导</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="convertCode()">
+                <span>🚀 转换为 PRISM</span>
+            </button>
+            <button class="btn btn-secondary" onclick="cleanCode()">
+                <span>🧹 清洗 PAT 代码</span>
+            </button>
+            <button class="btn btn-info" onclick="copyToClipboard()">
+                <span>📋 复制 PRISM 代码</span>
+            </button>
+            <select id="exampleSelect" onchange="loadExample()">
+                <option value="">📚 选择示例...</option>
+            </select>
+            <div style="margin-left: auto; color: #666; font-size: 14px;">
+                <span id="statusText">就绪</span>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h2>📝 PAT 代码输入</h2>
+                    <span class="stats" id="patStats">0 行</span>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea id="patInput" placeholder="在此输入PAT代码或选择示例...
+
+示例:
+channel ComSC 0;
+channel ComCA 0;
+
+SmartObject() =
+    ComSC!CoAP_POST ->
+    ComSC?CoAP_ACK.N_C ->
+    Skip();
+
+Controller() =
+    ComSC?CoAP_POST ->
+    ComSC!CoAP_ACK.N_C ->
+    Skip();
+
+System() = SmartObject() || Controller();
+"></textarea>
+                </div>
+            </div>
+
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h2>⚡ PRISM 代码输出</h2>
+                    <span class="stats" id="prismStats">等待转换...</span>
+                </div>
+                <div class="editor-wrapper">
+                    <div id="prismOutput" class="output-area">// PRISM代码将在这里显示...
+
+// 点击左侧"转换为PRISM"按钮开始转换
+// 或点击"清洗PAT代码"自动修复常见格式问题
+</div>
+                </div>
+                <div class="messages" id="messages" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div style="text-align: center; color: #667eea; font-weight: 600;">处理中...</div>
+    </div>
+
+    <script>
+        // Load examples on page load
+        window.addEventListener('load', loadExamples);
+
+        // Update PAT stats on input
+        document.getElementById('patInput').addEventListener('input', function() {
+            const lines = this.value.split('\n').length;
+            document.getElementById('patStats').textContent = `${lines} 行`;
+        });
+
+        async function loadExamples() {
+            try {
+                const response = await fetch('/api/examples');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('exampleSelect');
+                    data.examples.forEach(ex => {
+                        const option = document.createElement('option');
+                        option.value = ex.name;
+                        option.textContent = ex.name;
+                        option.dataset.content = ex.content;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load examples:', error);
+            }
+        }
+
+        function loadExample() {
+            const select = document.getElementById('exampleSelect');
+            const option = select.options[select.selectedIndex];
+            if (option.value && option.dataset.content) {
+                document.getElementById('patInput').value = option.dataset.content;
+                document.getElementById('patStats').textContent = 
+                    `${option.dataset.content.split('\n').length} 行`;
+                setStatus('示例已加载: ' + option.value, 'info');
+            }
+        }
+
+        async function convertCode() {
+            const patCode = document.getElementById('patInput').value;
+            
+            if (!patCode.trim()) {
+                alert('请输入PAT代码！');
+                return;
+            }
+
+            showLoading(true);
+            setStatus('正在转换...', 'info');
+
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        pat_code: patCode,
+                        options: {
+                            nonce_size: 10000,
+                            p_flip: 0.02
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('prismOutput').textContent = data.prism_code;
+                    
+                    const lines = data.prism_code.split('\n').length;
+                    document.getElementById('prismStats').textContent = 
+                        `${lines} 行 | ${data.stats.processes} 进程 | ${data.stats.channels} 信道 | ${data.stats.variables} 变量`;
+                    
+                    // 显示错误和警告
+                    showMessages(data.errors, data.warnings);
+                    
+                    // 成功提示，即使有警告
+                    if (data.warnings && data.warnings.length > 0) {
+                        setStatus(`✅ 转换成功！（有 ${data.warnings.length} 条语法警告，但不影响输出）`, 'success');
+                    } else {
+                        setStatus('✅ 转换成功！无警告', 'success');
+                    }
+                } else {
+                    showMessages(data.errors, []);
+                    setStatus('❌ 转换失败', 'error');
+                    document.getElementById('prismOutput').textContent = 
+                        '// 转换失败，请检查错误信息并修改PAT代码\n// 提示：可以尝试使用"清洗PAT代码"功能';
+                }
+            } catch (error) {
+                alert('转换失败: ' + error.message);
+                setStatus('❌ 转换失败', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function cleanCode() {
+            const patCode = document.getElementById('patInput').value;
+            
+            if (!patCode.trim()) {
+                alert('请输入PAT代码！');
+                return;
+            }
+
+            showLoading(true);
+            setStatus('正在清洗代码...', 'info');
+
+            try {
+                const response = await fetch('/api/clean', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ pat_code: patCode })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('patInput').value = data.cleaned_code;
+                    document.getElementById('patStats').textContent = 
+                        `${data.cleaned_code.split('\n').length} 行`;
+                    setStatus('✅ 代码已清洗！', 'success');
+                }
+            } catch (error) {
+                alert('清洗失败: ' + error.message);
+                setStatus('❌ 清洗失败', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function copyToClipboard() {
+            const prismCode = document.getElementById('prismOutput').textContent;
+            
+            if (!prismCode || prismCode.startsWith('//')) {
+                alert('还没有生成PRISM代码！');
+                return;
+            }
+
+            navigator.clipboard.writeText(prismCode).then(() => {
+                setStatus('✅ 已复制到剪贴板！', 'success');
+            }).catch(err => {
+                alert('复制失败: ' + err);
+            });
+        }
+
+        function showMessages(errors, warnings) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+
+            if (errors.length === 0 && warnings.length === 0) {
+                messagesDiv.style.display = 'none';
+                return;
+            }
+
+            messagesDiv.style.display = 'block';
+
+            // 如果只有警告，添加说明提示
+            if (errors.length === 0 && warnings.length > 0) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'message message-info';
+                infoDiv.innerHTML = `ℹ️ <strong>注意：</strong>语法警告通常不影响转换结果。如果右侧已生成PRISM代码，说明转换成功！<br>
+                    <small>这些警告是因为PAT语法有多种变体，解析器报告了一些"非标准"但仍可理解的写法。</small>`;
+                messagesDiv.appendChild(infoDiv);
+            }
+
+            errors.forEach(err => {
+                const div = document.createElement('div');
+                div.className = 'message message-error';
+                div.textContent = `❌ ${err.message}`;
+                if (err.context) {
+                    const contextSpan = document.createElement('small');
+                    contextSpan.style.display = 'block';
+                    contextSpan.style.marginTop = '5px';
+                    contextSpan.style.color = '#666';
+                    contextSpan.textContent = err.context;
+                    div.appendChild(contextSpan);
+                }
+                messagesDiv.appendChild(div);
+            });
+
+            warnings.forEach(warn => {
+                const div = document.createElement('div');
+                div.className = 'message message-warning';
+                div.textContent = `⚠️ ${warn.message}`;
+                if (warn.context) {
+                    const contextSpan = document.createElement('small');
+                    contextSpan.style.display = 'block';
+                    contextSpan.style.marginTop = '5px';
+                    contextSpan.style.color = '#666';
+                    contextSpan.textContent = warn.context;
+                    div.appendChild(contextSpan);
+                }
+                messagesDiv.appendChild(div);
+            });
+        }
+
+        function setStatus(text, type) {
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = text;
+            statusText.style.color = type === 'error' ? '#c53030' : 
+                                    type === 'success' ? '#38a169' : '#4299e1';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('active', show);
+        }
+    </script>
+</body>
+</html>

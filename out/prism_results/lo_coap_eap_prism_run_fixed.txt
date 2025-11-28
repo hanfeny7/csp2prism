@@ -1,0 +1,12 @@
+PRISM
+=====
+
+Version: 4.9
+Date: Wed Nov 19 02:58:29 UTC 2025
+Hostname: codespaces-1eed51
+Memory limits: cudd=1g, java(heap)=2g
+Command line: prism out/prism_code/lo_coap_eap_mdp_singlefile.pm paper/prism_props.pctl -const p_flip=0.02 -const p_loss=0.04
+
+Parsing PRISM model file "out/prism_code/lo_coap_eap_mdp_singlefile.pm"...
+
+Error: Syntax error ("+", line 211, column 3).

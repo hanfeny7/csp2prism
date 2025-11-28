@@ -1,0 +1,265 @@
+PRISM
+=====
+
+Version: 4.9
+Date: Wed Nov 19 03:12:43 UTC 2025
+Hostname: codespaces-1eed51
+Memory limits: cudd=1g, java(heap)=2g
+Command line: prism /workspaces/csp2prism/out/prism_code/lo_coap_eap_mdp_singlefile.pm /workspaces/csp2prism/paper/prism_props.pctl -const 'p_flip=0.0,p_loss=0.0'
+
+Parsing PRISM model file "/workspaces/csp2prism/out/prism_code/lo_coap_eap_mdp_singlefile.pm"...
+
+Type:        MDP
+Modules:     SmartObject Controller AAA_Server ChanSC ChanCA Intruder
+Variables:   chan_sc chan_ca auth_complete intruder_msk so c a cs ca i
+Labels:      "auth_success" "intruder_knows_msk"
+Rewards:     "msgs" "bytes"
+
+Parsing properties file "/workspaces/csp2prism/paper/prism_props.pctl"...
+
+10 properties:
+(1) Pmin=? [ F "auth_success" ]
+(2) Pmax=? [ F "auth_success" ]
+(3) Pmin=? [ F "intruder_knows_msk" ]
+(4) Pmax=? [ F "intruder_knows_msk" ]
+(5) R{"bytes"}min=? [ F "auth_success" ]
+(6) R{"bytes"}max=? [ F "auth_success" ]
+(7) R{"msgs"}min=? [ F "auth_success" ]
+(8) R{"msgs"}max=? [ F "auth_success" ]
+(9) Pmin=? [ F<=20 "auth_success" ]
+(10) Pmax=? [ F<=20 "auth_success" ]
+
+---------------------------------------------------------------------
+
+Model checking: Pmin=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Building model (engine:symbolic)...
+Model constants: p_flip=0,p_loss=0
+
+Warning: Update 1 of command 1 of module "ChanSC" doesn't do anything ("(chan_sc'=10)", line 60, column 41)
+
+Warning: Update 1 of command 2 of module "ChanSC" doesn't do anything (line 61, column 41)
+
+Warning: Update 1 of command 1 of module "ChanCA" doesn't do anything ("(chan_ca'=10)", line 70, column 41)
+
+Warning: Update 1 of command 2 of module "ChanCA" doesn't do anything (line 71, column 41)
+
+Computing reachable states...
+
+Reachability (BFS): 12 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Time for model construction: 0.041 seconds.
+
+Type:        MDP
+States:      100 (1 initial)
+Transitions: 500
+
+Transition matrix: 677 nodes (2 terminal), 500 minterms, vars: 23r/23c/16nd
+
+Prob0E: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Prob1A: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+yes = 1, no = 99, maybe = 0
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.007 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: Pmax=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0A: 12 iterations in 0.01 seconds (average 0.000833, setup 0.00)
+
+Prob1E: 13 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+yes = 100, no = 0, maybe = 0
+
+Value in the initial state: 1.0
+
+Time for model checking: 0.004 seconds.
+
+Result: 1.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: Pmin=? [ F "intruder_knows_msk" ]
+Model constants: p_flip=0,p_loss=0
+
+yes = 0, no = 100, maybe = 0
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.0 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: Pmax=? [ F "intruder_knows_msk" ]
+Model constants: p_flip=0,p_loss=0
+
+yes = 0, no = 100, maybe = 0
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.001 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: R{"bytes"}min=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0A: 12 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Prob1E: 13 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Warning: PRISM hasn't checked for zero-reward loops.
+Your minimum rewards may be too low...
+
+goal = 1, inf = 0, maybe = 99
+
+Computing remaining rewards...
+Switching engine since hybrid engine does yet support this computation...
+Engine: Sparse
+
+Building sparse matrix (transitions)... [n=100, nc=495, nnz=495, k=5] [8.1 KB]
+Building sparse matrix (transition rewards)... [n=100, nc=495, nnz=0, k=5] [2.3 KB]
+Creating vector for state rewards... [0.8 KB]
+Creating vector for inf... [0.8 KB]
+Allocating iteration vectors... [2 x 0.8 KB]
+TOTAL: [13.6 KB]
+
+Starting iterations...
+
+Iterative method: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.004 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: R{"bytes"}max=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0E: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Prob1A: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+goal = 1, inf = 99, maybe = 0
+
+Value in the initial state: Infinity
+
+Time for model checking: 0.0 seconds.
+
+Result: Infinity (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: R{"msgs"}min=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0A: 12 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Prob1E: 13 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Warning: PRISM hasn't checked for zero-reward loops.
+Your minimum rewards may be too low...
+
+goal = 1, inf = 0, maybe = 99
+
+Computing remaining rewards...
+Switching engine since hybrid engine does yet support this computation...
+Engine: Sparse
+
+Building sparse matrix (transitions)... [n=100, nc=495, nnz=495, k=5] [8.1 KB]
+Building sparse matrix (transition rewards)... [n=100, nc=495, nnz=0, k=5] [2.3 KB]
+Creating vector for state rewards... [0.8 KB]
+Creating vector for inf... [0.8 KB]
+Allocating iteration vectors... [2 x 0.8 KB]
+TOTAL: [13.6 KB]
+
+Starting iterations...
+
+Iterative method: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.002 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: R{"msgs"}max=? [ F "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0E: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Prob1A: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+goal = 1, inf = 99, maybe = 0
+
+Value in the initial state: Infinity
+
+Time for model checking: 0.001 seconds.
+
+Result: Infinity (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: Pmin=? [ F<=20 "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0E: 1 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+yes = 1, no = 99, maybe = 0
+
+Value in the initial state: 0.0
+
+Time for model checking: 0.001 seconds.
+
+Result: 0.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Model checking: Pmax=? [ F<=20 "auth_success" ]
+Model constants: p_flip=0,p_loss=0
+
+Prob0A: 12 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+yes = 1, no = 0, maybe = 99
+
+Computing probabilities...
+Engine: Hybrid
+
+Building hybrid MTBDD matrices... [nm=16, levels=23, nodes=977] [45.8 KB]
+Adding sparse bits... [levels=23-23, num=16, compact=16/16] [3.6 KB]
+Creating vector for yes... [dist=2, compact] [0.2 KB]
+Allocating iteration vectors... [3 x 0.8 KB]
+TOTAL: [52.0 KB]
+
+Starting iterations...
+
+Iterative method: 20 iterations in 0.00 seconds (average 0.000000, setup 0.00)
+
+Value in the initial state: 1.0
+
+Time for model checking: 0.005 seconds.
+
+Result: 1.0 (exact floating point)
+
+---------------------------------------------------------------------
+
+Note: There were 6 warnings during computation.
+

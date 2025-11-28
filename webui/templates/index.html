@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT2PRISM - Process Analysis Toolkit to PRISM Converter</title>
+    <style>
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-editor: #1e1e1e;
+            --vscode-panel: #2d2d30;
+            --vscode-border: #3e3e42;
+            --vscode-text: #cccccc;
+            --vscode-text-bright: #ffffff;
+            --vscode-text-muted: #969696;
+            --vscode-accent: #007acc;
+            --vscode-accent-hover: #1c97ea;
+            --vscode-success: #89d185;
+            --vscode-warning: #cca700;
+            --vscode-error: #f48771;
+            --vscode-input-bg: #232323;
+            --vscode-button: #0e639c;
+            --vscode-button-hover: #1177bb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Roboto', 'Oxygen', 'Cantarell', sans-serif;
+            background: var(--vscode-bg);
+            color: var(--vscode-text);
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Title Bar */
+        .title-bar {
+            background: var(--vscode-panel);
+            height: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--vscode-border);
+            justify-content: space-between;
+        }
+
+        .title-bar .app-name {
+            color: var(--vscode-text-bright);
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-bar .app-name .icon {
+            font-size: 16px;
+        }
+
+        .title-bar .subtitle {
+            color: var(--vscode-text-muted);
+            font-size: 11px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 48px;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            gap: 8px;
+        }
+
+        .sidebar-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--vscode-text-muted);
+            font-size: 24px;
+            position: relative;
+        }
+
+        .sidebar-icon:hover {
+            color: var(--vscode-text-bright);
+        }
+
+        .sidebar-icon.active {
+            color: var(--vscode-text-bright);
+        }
+
+        .sidebar-icon.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--vscode-accent);
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            background: var(--vscode-panel);
+            height: 50px;
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 12px;
+        }
+
+        .btn {
+            background: var(--vscode-button);
+            color: var(--vscode-text-bright);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+
+        .btn:hover {
+            background: var(--vscode-button-hover);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn.secondary {
+            background: var(--vscode-input-bg);
+            color: var(--vscode-text);
+        }
+
+        .btn.secondary:hover {
+            background: #505050;
+        }
+
+        .btn-icon {
+            font-size: 16px;
+        }
+
+        .select-wrapper {
+            position: relative;
+            margin-left: auto;
+        }
+
+        select {
+            background: var(--vscode-input-bg);
+            color: var(--vscode-text);
+            border: 1px solid var(--vscode-border);
+            padding: 6px 30px 6px 10px;
+            border-radius: 2px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        select:focus {
+            outline: 1px solid var(--vscode-accent);
+            outline-offset: -1px;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: var(--vscode-text-muted);
+            pointer-events: none;
+        }
+
+        /* Split Editor */
+        .split-editor {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff !important;
+            border-right: 1px solid #ccc;
+        }
+
+        .editor-pane:last-child {
+            border-right: none;
+        }
+
+        .editor-header {
+            display: flex;
+            align-items: center;
+            height: 40px;
+            background: var(--vscode-panel);
+            border-bottom: 1px solid var(--vscode-border);
+            padding: 0 15px;
+            justify-content: space-between;
+        }
+
+        .editor-tab {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .editor-actions {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .editor-actions label,
+        .editor-actions select,
+        .editor-actions button {
+            vertical-align: middle;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .editor-action-btn {
+            background: none;
+            border: none;
+            color: var(--vscode-text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-size: 11px;
+            transition: all 0.15s;
+        }
+
+        .editor-action-btn:hover {
+            background: var(--vscode-input-bg);
+            color: var(--vscode-text-bright);
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: #fff !important;
+            color: #222 !important;
+            border: 1px solid #ccc;
+            padding: 15px;
+            font-family: 'Consolas', 'Fira Mono', 'Menlo', 'Monaco', 'monospace';
+            font-size: 15px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: var(--vscode-text-muted);
+        }
+
+        .output-display {
+            width: 100%;
+            height: 100%;
+            background: #fff !important;
+            color: #222 !important;
+            border: 1px solid #ccc;
+            padding: 15px;
+            overflow: auto;
+            font-family: 'Consolas', 'Fira Mono', 'Menlo', 'Monaco', 'monospace';
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .output-display pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .output-placeholder {
+            color: var(--vscode-text-muted);
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .output-placeholder .icon {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--vscode-accent);
+            height: 22px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            color: white;
+            justify-content: space-between;
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Messages */
+        .message-panel {
+            background: var(--vscode-panel);
+            border-top: 1px solid var(--vscode-border);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .message-panel.show {
+            display: block;
+        }
+
+        .message-header {
+            padding: 8px 15px;
+            background: var(--vscode-sidebar);
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .message-close {
+            background: none;
+            border: none;
+            color: var(--vscode-text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+
+        .message-close:hover {
+            background: var(--vscode-input-bg);
+            color: var(--vscode-text-bright);
+        }
+
+        .message-list {
+            padding: 8px 0;
+        }
+
+        .message-item {
+            padding: 6px 15px 6px 40px;
+            font-size: 12px;
+            border-left: 3px solid transparent;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .message-item::before {
+            position: absolute;
+            left: 15px;
+            top: 7px;
+        }
+
+        .message-item.error {
+            border-left-color: var(--vscode-error);
+            background: rgba(244, 135, 113, 0.1);
+        }
+
+        .message-item.error::before {
+            content: '✖';
+            color: var(--vscode-error);
+        }
+
+        .message-item.warning {
+            border-left-color: var(--vscode-warning);
+            background: rgba(204, 167, 0, 0.1);
+        }
+
+        .message-item.warning::before {
+            content: '⚠';
+            color: var(--vscode-warning);
+        }
+
+        .message-item.info {
+            border-left-color: var(--vscode-accent);
+            background: rgba(0, 122, 204, 0.1);
+        }
+
+        .message-item.info::before {
+            content: 'ℹ';
+            color: var(--vscode-accent);
+        }
+
+        .message-item.success {
+            border-left-color: var(--vscode-success);
+            background: rgba(137, 209, 133, 0.1);
+        }
+
+        .message-item.success::before {
+            content: '✓';
+            color: var(--vscode-success);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--vscode-editor);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--vscode-accent);
+            border-radius: 5px;
+            border: 2px solid var(--vscode-editor);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        /* Loading indicator */
+        .loading {
+            display: none;
+            margin-left: 8px;
+        }
+
+        .loading.show {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--vscode-text-muted);
+            border-top-color: var(--vscode-accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--vscode-panel);
+            border: 1px solid var(--vscode-border);
+            border-radius: 4px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--vscode-sidebar);
+        }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--vscode-text-bright);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--vscode-text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--vscode-input-bg);
+            color: var(--vscode-text-bright);
+        }
+
+        .modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-content h2 {
+            color: var(--vscode-accent);
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+        }
+
+        .modal-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .modal-content h3 {
+            color: var(--vscode-text-bright);
+            font-size: 15px;
+            margin: 15px 0 8px 0;
+        }
+
+        .modal-content p {
+            color: var(--vscode-text);
+            line-height: 1.6;
+            margin: 8px 0;
+        }
+
+        .modal-content code {
+            background: var(--vscode-input-bg);
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-family: 'Consolas', monospace;
+            color: var(--vscode-accent);
+        }
+
+        .modal-content pre {
+            background: var(--vscode-editor);
+            border: 1px solid var(--vscode-border);
+            padding: 12px;
+            border-radius: 2px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .modal-content ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .modal-content li {
+            color: var(--vscode-text);
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .feature-card {
+            background: var(--vscode-editor);
+            border: 1px solid var(--vscode-border);
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .feature-card h4 {
+            color: var(--vscode-accent);
+            font-size: 14px;
+            margin: 0 0 8px 0;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .file-input-wrapper {
+            margin: 15px 0;
+        }
+
+        .file-input-btn {
+            display: inline-block;
+            background: var(--vscode-button);
+            color: var(--vscode-text-bright);
+            padding: 8px 16px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .file-input-btn:hover {
+            background: var(--vscode-button-hover);
+        }
+
+        .file-input-btn input[type="file"] {
+            display: none;
+        }
+
+        /* 禁止文本下划线（拼写检查/错误提示） */
+        .editor-pane textarea, .editor-pane input, .editor-pane pre, .editor-pane div {
+            text-decoration: none !important;
+            -webkit-text-decoration: none !important;
+            text-underline: none !important;
+            -webkit-text-underline: none !important;
+            spellcheck: false;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="app-name">
+                <span class="icon">⚡</span>
+                PAT2PRISM Converter
+            </div>
+            <div class="subtitle">Process Analysis Toolkit → PRISM Model Checker</div>
+        </div>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-icon active" title="Convert">
+                    <span>⚙</span>
+                </div>
+                <div class="sidebar-icon" title="Examples">
+                    <span>📁</span>
+                </div>
+                <div class="sidebar-icon" title="Help">
+                    <span>?</span>
+                </div>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <button class="btn" onclick="convertCode()">
+                        <span class="btn-icon">▶</span>
+                        Convert
+                    </button>
+                    <button class="btn secondary" onclick="cleanCode()" title="Normalize syntax, remove system processes, and fix common issues">
+                        <span class="btn-icon">✨</span>
+                        Preprocess
+                    </button>
+                    <button class="btn secondary" onclick="clearAll()">
+                        <span class="btn-icon">🗑</span>
+                        Clear
+                    </button>
+                    <div class="loading" id="loadingSpinner"></div>
+                    
+                    <div class="select-wrapper">
+                        <select id="exampleSelect" onchange="loadExample()">
+                            <option value="">Load Example...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Split Editor -->
+                <div class="split-editor">
+                    <!-- Left Pane: PAT Input -->
+                    <div class="editor-pane">
+                        <div class="editor-header">
+                            <div class="editor-tab">
+                                <span class="tab-icon">📝</span>
+                                <span>input.pat</span>
+                            </div>
+                            <div class="editor-actions">
+                                <label for="patFontSize" style="margin-right:8px;">Font size:</label>
+                                <select id="patFontSize" style="margin-right:12px;">
+                                    <option value="13">13px</option>
+                                    <option value="15" selected>15px</option>
+                                    <option value="18">18px</option>
+                                    <option value="21">21px</option>
+                                    <option value="24">24px</option>
+                                </select>
+                                <button class="editor-action-btn" onclick="document.getElementById('patInput').value = ''">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div class="editor-content">
+                            <textarea id="patInput" placeholder="// Enter your PAT (Process Analysis Toolkit) code here...
+// Example:
+// channel ch 0;
+// var x = 0;
+// 
+// Process() = ch!x -> Skip();
+// 
+// System() = Process();" style="background:#edecec;color:#222;border:1px solid #ffffff;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Pane: PRISM Output -->
+                    <div class="editor-pane">
+                        <div class="editor-header">
+                            <div class="editor-tab">
+                                <span class="tab-icon">📄</span>
+                                <span>output.prism</span>
+                            </div>
+                            <div class="editor-actions">
+                                <label for="prismFontSize" style="margin-right:8px;">Font size:</label>
+                                <select id="prismFontSize" style="margin-right:12px;">
+                                    <option value="13">13px</option>
+                                    <option value="15" selected>15px</option>
+                                    <option value="18">18px</option>
+                                    <option value="21">21px</option>
+                                    <option value="24">24px</option>
+                                </select>
+                                <button class="editor-action-btn" onclick="copyOutput()">
+                                    Copy to Clipboard
+                                </button>
+                            </div>
+                        </div>
+                        <div class="editor-content">
+                            <div id="prismOutput" class="output-display" style="background:#f2f0f0;color:#222;border:1px solid #ebebebf6;">
+                                <div class="output-placeholder">
+                                    <div class="icon">📊</div>
+                                    <div>PRISM model output will appear here</div>
+                                    <div style="font-size: 11px; opacity: 0.7;">Click "Convert" to generate PRISM code from your PAT input</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Panel -->
+                <div class="message-panel" id="messagePanel">
+                    <div class="message-header">
+                        <span id="messagePanelTitle">Messages</span>
+                        <button class="message-close" onclick="hideMessages()">✕</button>
+                    </div>
+                    <div class="message-list" id="messageList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <span>⚡</span>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-item" id="statsDisplay" style="display: none;">
+                    <span id="statsText"></span>
+                </div>
+                <div class="status-item">
+                    <span>PAT2PRISM v2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStats = null;
+
+        // Load examples on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/examples')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.examples) {
+                        const select = document.getElementById('exampleSelect');
+                        const modalSelect = document.getElementById('modalExampleSelect');
+                        
+                        data.examples.forEach(example => {
+                            // Add to main dropdown
+                            const option = document.createElement('option');
+                            option.value = example.content;
+                            option.textContent = example.name;
+                            select.appendChild(option);
+                            
+                            // Add to modal dropdown
+                            const modalOption = document.createElement('option');
+                            modalOption.value = example.content;
+                            modalOption.textContent = example.name;
+                            modalSelect.appendChild(modalOption);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load examples:', error);
+                });
+        });
+
+        function loadExample() {
+            const select = document.getElementById('exampleSelect');
+            const content = select.value;
+            if (content) {
+                document.getElementById('patInput').value = content;
+                setStatus('Example loaded');
+                setTimeout(() => setStatus('Ready'), 2000);
+            }
+        }
+
+        function loadExampleFromModal() {
+            const select = document.getElementById('modalExampleSelect');
+            const content = select.value;
+            if (content) {
+                document.getElementById('patInput').value = content;
+                setStatus('Example loaded');
+                hideModal('fileModal');
+                setTimeout(() => setStatus('Ready'), 2000);
+            }
+        }
+
+        function convertCode() {
+            const patCode = document.getElementById('patInput').value.trim();
+            
+            if (!patCode) {
+                showMessages([{
+                    type: 'warning',
+                    message: 'Please enter PAT code before converting'
+                }]);
+                return;
+            }
+
+            showLoading(true);
+            setStatus('Converting...');
+
+            fetch('/api/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ pat_code: patCode })
+            })
+            .then(response => response.json())
+            .then(function(data) {
+                showLoading(false);
+                if (data.success && data.prism_code) {
+                    document.getElementById('prismOutput').innerHTML = 
+                        '<pre>' + escapeHtml(data.prism_code) + '</pre>';
+                    currentStats = data.stats;
+                    updateStatsDisplay(data.stats);
+                    const messages = [];
+                    if (data.errors && data.errors.length > 0) {
+                        messages.push({
+                            type: 'error',
+                            message: `${data.errors.length} error(s) found`,
+                            items: data.errors
+                        });
+                    }
+                    if (data.warnings && data.warnings.length > 0) {
+                        messages.push({
+                            type: 'info',
+                            message: `Conversion successful with ${data.warnings.length} syntax warning(s). These warnings typically don't affect the output quality.`
+                        });
+                    }
+                    if (messages.length > 0) {
+                        showMessages(messages, data.warnings, data.errors);
+                    } else {
+                        setStatus('✓ Conversion successful');
+                    }
+                } else {
+                    document.getElementById('prismOutput').innerHTML = 
+                        '<div class="output-placeholder"><div class="icon">⚠</div><div>Conversion failed</div></div>';
+                    const errorMessages = [{
+                        type: 'error',
+                        message: data.error || 'Conversion failed',
+                        items: data.errors || []
+                    }];
+                    showMessages(errorMessages, [], data.errors || []);
+                    setStatus('✖ Conversion failed');
+                }
+            })
+            .catch(function(error) {
+                showLoading(false);
+                document.getElementById('prismOutput').innerHTML = 
+                    '<div class="output-placeholder"><div class="icon">⚠</div><div>Network error</div></div>';
+                showMessages([{
+                    type: 'error',
+                    message: 'Network error: ' + error.message
+                }]);
+                setStatus('✖ Network error');
+            });
+        }
+
+        function cleanCode() {
+            const patCode = document.getElementById('patInput').value.trim();
+            
+            if (!patCode) {
+                showMessages([{
+                    type: 'warning',
+                    message: 'Please enter PAT code before cleaning'
+                }]);
+                return;
+            }
+
+            showLoading(true);
+            setStatus('Preprocessing code...');
+
+            fetch('/api/clean', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ pat_code: patCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    document.getElementById('patInput').value = data.cleaned_code;
+                    showMessages([{
+                        type: 'info',
+                        message: 'Code preprocessed: normalized syntax, filtered system processes (parallel compositions)'
+                    }]);
+                    setStatus('✓ Preprocessed');
+                    setTimeout(() => setStatus('Ready'), 3000);
+                } else {
+                    showMessages([{
+                        type: 'error',
+                        message: 'Cleaning failed: ' + (data.error || 'Unknown error')
+                    }]);
+                    setStatus('✖ Cleaning failed');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showMessages([{
+                    type: 'error',
+                    message: 'Network error: ' + error.message
+                }]);
+                setStatus('✖ Network error');
+            });
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('prismOutput');
+            const text = output.innerText || output.textContent;
+            
+            if (!text || text.includes('will appear here')) {
+                showMessages([{
+                    type: 'warning',
+                    message: 'No output to copy. Please convert PAT code first.'
+                }]);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                setStatus('✓ Copied to clipboard');
+                setTimeout(() => setStatus('Ready'), 2000);
+            }).catch(err => {
+                showMessages([{
+                    type: 'error',
+                    message: 'Failed to copy: ' + err.message
+                }]);
+            });
+        }
+
+        function clearAll() {
+            document.getElementById('patInput').value = '';
+            document.getElementById('prismOutput').innerHTML = 
+                '<div class="output-placeholder"><div class="icon">📊</div><div>PRISM model output will appear here</div><div style="font-size: 11px; opacity: 0.7;">Click "Convert" to generate PRISM code from your PAT input</div></div>';
+            hideMessages();
+            currentStats = null;
+            updateStatsDisplay(null);
+            setStatus('Ready');
+        }
+
+        function showMessages(messages, warnings = [], errors = []) {
+            const panel = document.getElementById('messagePanel');
+            const list = document.getElementById('messageList');
+            const title = document.getElementById('messagePanelTitle');
+            
+            list.innerHTML = '';
+            
+            let totalCount = 0;
+            
+            messages.forEach(msg => {
+                if (msg.items && msg.items.length > 0) {
+                    msg.items.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'message-item ' + msg.type;
+                        div.textContent = item.message || item;
+                        list.appendChild(div);
+                        totalCount++;
+                    });
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'message-item ' + msg.type;
+                    div.textContent = msg.message;
+                    list.appendChild(div);
+                    totalCount++;
+                }
+            });
+            
+            const errorCount = errors ? errors.length : 0;
+            const warningCount = warnings ? warnings.length : 0;
+            
+            if (errorCount > 0 && warningCount > 0) {
+                title.textContent = `Problems (${errorCount} errors, ${warningCount} warnings)`;
+            } else if (errorCount > 0) {
+                title.textContent = `Problems (${errorCount} errors)`;
+            } else if (warningCount > 0) {
+                title.textContent = `Problems (${warningCount} warnings)`;
+            } else {
+                title.textContent = `Messages (${totalCount})`;
+            }
+            
+            panel.classList.add('show');
+        }
+
+        function hideMessages() {
+            document.getElementById('messagePanel').classList.remove('show');
+        }
+
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.add('show');
+            } else {
+                spinner.classList.remove('show');
+            }
+        }
+
+        function setStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function updateStatsDisplay(stats) {
+            const display = document.getElementById('statsDisplay');
+            const text = document.getElementById('statsText');
+            
+            if (stats && (stats.processes || stats.channels || stats.variables)) {
+                const parts = [];
+                if (stats.processes) parts.push(`${stats.processes} processes`);
+                if (stats.channels) parts.push(`${stats.channels} channels`);
+                if (stats.variables) parts.push(`${stats.variables} variables`);
+                
+                text.textContent = parts.join(' | ');
+                display.style.display = 'flex';
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Modal functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // File upload handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.pat')) {
+                showMessages([{
+                    type: 'warning',
+                    message: 'Please select a PAT file (.pat extension)'
+                }]);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('patInput').value = e.target.result;
+                setStatus(`✓ Loaded ${file.name}`);
+                hideModal('fileModal');
+                setTimeout(() => setStatus('Ready'), 2000);
+            };
+            reader.onerror = function() {
+                showMessages([{
+                    type: 'error',
+                    message: 'Failed to read file: ' + file.name
+                }]);
+            };
+            reader.readAsText(file);
+        }
+
+        // Click outside modal to close
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = document.querySelectorAll('.modal-overlay');
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+
+            // Sidebar icon clicks
+            document.querySelectorAll('.sidebar-icon').forEach((icon, index) => {
+                icon.addEventListener('click', function() {
+                    // Remove active from all
+                    document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
+                    // Add active to clicked
+                    this.classList.add('active');
+
+                    // Show corresponding modal
+                    if (index === 1) {  // File icon
+                        showModal('fileModal');
+                    } else if (index === 2) {  // Help icon
+                        showModal('helpModal');
+                    }
+                });
+            });
+        });
+
+        // 字体大小控制
+        document.addEventListener('DOMContentLoaded', function() {
+            var patFontSize = document.getElementById('patFontSize');
+            var prismFontSize = document.getElementById('prismFontSize');
+            var patInput = document.getElementById('patInput');
+            var prismOutput = document.getElementById('prismOutput');
+            if (patFontSize && patInput) {
+                patInput.style.fontSize = patFontSize.value + 'px';
+                patFontSize.addEventListener('change', function() {
+                    patInput.style.fontSize = patFontSize.value + 'px';
+                });
+            }
+            if (prismFontSize && prismOutput) {
+                prismOutput.style.fontSize = prismFontSize.value + 'px';
+                prismFontSize.addEventListener('change', function() {
+                    prismOutput.style.fontSize = prismFontSize.value + 'px';
+                });
+            }
+        });
+    </script>
+
+    <!-- File Upload Modal -->
+    <div id="fileModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">📁 Open PAT File</div>
+                <button class="modal-close" onclick="hideModal('fileModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <h3>Load from Local File</h3>
+                <p>Select a PAT file from your computer to load into the editor.</p>
+                
+                <div class="file-input-wrapper">
+                    <label class="file-input-btn">
+                        <span>📂 Choose File...</span>
+                        <input type="file" accept=".pat" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+
+                <h3>Load from Examples</h3>
+                <p>Or choose one of the built-in example files:</p>
+                
+                <select id="modalExampleSelect" onchange="loadExampleFromModal()" style="width: 100%; margin: 10px 0;">
+                    <option value="">Select an example...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">❓ User Manual & Help</div>
+                <button class="modal-close" onclick="hideModal('helpModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <h2>🚀 Quick Start</h2>
+                <p><strong>PAT2PRISM</strong> automatically converts Process Analysis Toolkit (PAT) protocols into PRISM probabilistic model checker format.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>1️⃣ Input PAT Code</h4>
+                        <p>Type or paste your PAT protocol specification in the left pane, or load a file using the 📁 icon.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>2️⃣ Preprocess (Optional)</h4>
+                        <p>Click <code>Preprocess</code> to normalize syntax and remove system-level processes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>3️⃣ Convert</h4>
+                        <p>Click <code>Convert</code> to generate PRISM code. Results appear in the right pane.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>4️⃣ Copy & Use</h4>
+                        <p>Click <code>Copy PRISM</code> to copy the generated code for use in PRISM verifier.</p>
+                    </div>
+                </div>
+
+                <h2>✨ Key Features</h2>
+                
+                <h3>Smart Process Filtering</h3>
+                <p>Automatically identifies and removes system-level parallel compositions like <code>System() = P1() || P2()</code>, keeping only actual protocol actors.</p>
+
+                <h3>Message Field Extraction</h3>
+                <p>Analyzes send/receive operations to automatically extract message fields:</p>
+                <pre>ComSC!LO_CoAP_POST.ID_P.N_P → Creates: LO_CoAP_POST_ID_P, LO_CoAP_POST_N_P</pre>
+
+                <h3>Intelligent Type Inference</h3>
+                <ul>
+                    <li><code>N_*</code> (nonces): [0..10000]</li>
+                    <li><code>ID_*</code> (identifiers): [0..100]</li>
+                    <li><code>MAC_*</code> (MACs): [0..1000]</li>
+                    <li>Boolean variables: preserved as <code>bool</code></li>
+                </ul>
+
+                <h3>Synchronized Communication</h3>
+                <p>PAT send/receive operations become synchronized PRISM transitions with proper label matching.</p>
+
+                <h2>📋 PAT Syntax Support</h2>
+                
+                <h3>Supported Constructs</h3>
+                <ul>
+                    <li><strong>Channels</strong>: <code>channel ComSC 0;</code></li>
+                    <li><strong>Variables</strong>: <code>var PSK = 1234;</code></li>
+                    <li><strong>Enums</strong>: <code>enum {MSG1, MSG2, MSG3};</code></li>
+                    <li><strong>Processes</strong>: <code>Process() = action -> next;</code></li>
+                    <li><strong>Send</strong>: <code>ch!message.field1.field2 -></code></li>
+                    <li><strong>Receive</strong>: <code>ch?message.field1.field2 -></code></li>
+                    <li><strong>Guards</strong>: <code>if (condition) { ... }</code></li>
+                    <li><strong>Assignments</strong>: <code>{var = value;} -></code></li>
+                    <li><strong>Skip</strong>: <code>Skip()</code></li>
+                    <li><strong>Parallel</strong>: <code>P1() || P2()</code></li>
+                </ul>
+
+                <h3>Preprocessing Fixes</h3>
+                <ul>
+                    <li>Converts <code>#define</code> to <code>var</code> declarations</li>
+                    <li>Simplifies array initializations: <code>[a,b,c]</code> → <code>a</code></li>
+                    <li>Comments out system processes</li>
+                    <li>Normalizes channel syntax</li>
+                </ul>
+
+                <h2>⚙️ Generated PRISM Output</h2>
+                
+                <p>The tool generates professional PRISM models with:</p>
+                <ul>
+                    <li><strong>Configuration</strong>: Parameters like <code>p_flip</code>, <code>MAX_NONCE</code></li>
+                    <li><strong>Message Encoding</strong>: Integer constants for each message type</li>
+                    <li><strong>Global Variables</strong>: Protocol variables and message fields</li>
+                    <li><strong>Process Modules</strong>: One module per protocol actor</li>
+                    <li><strong>Labels</strong>: Success/error conditions for verification</li>
+                    <li><strong>Comments</strong>: Inline documentation and TODO notes</li>
+                </ul>
+
+                <h2>⚠️ Important Notes</h2>
+                
+                <h3>Syntax Warnings</h3>
+                <p>You may see parser warnings during conversion. These are often <strong>non-critical</strong> and conversion can still succeed. Check the right pane for output.</p>
+
+                <h3>Manual Refinement Required</h3>
+                <p>Generated PRISM code is a <strong>skeleton</strong> that needs refinement:</p>
+                <ul>
+                    <li>Implement cryptographic function logic (<code>call_*</code> placeholders)</li>
+                    <li>Add verification properties (LTL/CTL formulas)</li>
+                    <li>Optionally add probabilistic channel errors</li>
+                    <li>Optionally add Dolev-Yao intruder model</li>
+                </ul>
+
+                <h2>🔍 Example Workflow</h2>
+                
+                <pre>
+1. Load example: "Lo_coap_eap_clean_simplified.pat"
+2. Click "Preprocess" → See normalized code
+3. Click "Convert" → PRISM appears (331 lines)
+4. Check statistics: 3 processes, 2 channels, 32 variables
+5. Click "Copy PRISM" → Ready for PRISM verifier
+                </pre>
+
+                <h2>📚 Additional Resources</h2>
+                
+                <ul>
+                    <li><strong>PRISM Manual</strong>: <a href="https://www.prismmodelchecker.org/manual/" target="_blank" style="color: var(--vscode-accent);">prismmodelchecker.org/manual</a></li>
+                    <li><strong>PAT</strong>: <a href="http://pat.comp.nus.edu.sg/" target="_blank" style="color: var(--vscode-accent);">pat.comp.nus.edu.sg</a></li>
+                    <li><strong>Tool Repository</strong>: Check README.md and DEMO_GUIDE.md in the project folder</li>
+                </ul>
+
+                <h2>💡 Tips & Best Practices</h2>
+                
+                <ul>
+                    <li><strong>Start Simple</strong>: Test with small examples first</li>
+                    <li><strong>Use Preprocess</strong>: Helps clean messy PAT code</li>
+                    <li><strong>Check Statistics</strong>: Verify expected number of processes/variables</li>
+                    <li><strong>Read Comments</strong>: Generated code includes helpful TODO notes</li>
+                    <li><strong>Iterate</strong>: Refine PAT code and re-convert as needed</li>
+                </ul>
+
+                <h2>🐛 Troubleshooting</h2>
+                
+                <h3>Conversion Fails</h3>
+                <ul>
+                    <li>Try preprocessing first</li>
+                    <li>Check for unmatched braces/parentheses</li>
+                    <li>Simplify complex nested structures</li>
+                </ul>
+
+                <h3>Unexpected Output</h3>
+                <ul>
+                    <li>Review warnings in message panel</li>
+                    <li>Check if system processes were filtered</li>
+                    <li>Verify message field extraction matches expectations</li>
+                </ul>
+
+                <h3>JSON Serialization Error</h3>
+                <ul>
+                    <li>Server error - already fixed in current version</li>
+                    <li>Refresh page and try again</li>
+                </ul>
+
+                <h2>📧 Support</h2>
+                
+                <p>For bugs, feature requests, or questions:</p>
+                <ul>
+                    <li>Check <code>DEMO_GUIDE.md</code> and <code>QUICK_REFERENCE.md</code></li>
+                    <li>Review <code>TOOL_QUALITY_EVALUATION.md</code> for detailed analysis</li>
+                    <li>Contact: Repository maintainer</li>
+                </ul>
+
+                <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--vscode-border); color: var(--vscode-text-muted); text-align: center;">
+                    <strong>PAT2PRISM Converter v1.0</strong><br>
+                    Automated Security Protocol Translation Tool<br>
+                    Built for Formal Verification Research
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,2 @@
+Error: Could not find or load main class prism.PrismCL
+Caused by: java.lang.ClassNotFoundException: prism.PrismCL

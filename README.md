@@ -52,17 +52,11 @@ requirements.txt   # Python dependencies
 - Features: One-click copy, statistics display, error reporting
 
 ## Reproducibility & Review Notes
-- This tool is provided as a companion to a CCF-A paper. All core code, examples, and experiment scripts are open source.
-- Screenshots, experiment data, and reproduction steps are documented in `PAPER_WORKFLOW.md` and `COMPLETE_GUIDE.md`.
+- This tool is provided as a companion to a CCF-B paper. All core code, examples, and experiment scripts are open source.
 - For questions or suggestions, please use GitHub Issues or contact the author.
 
 ## License
 MIT License. See the LICENSE file for details.
-
-## Contact
-- Author: XXX (please fill in your name/organization)
-- Email: XXX (optional)
-- Project homepage / paper link: XXX (optional)
 
 ---
 > This tool has undergone multiple iterations. The interface and features are continuously optimized. Academic feedback and collaboration are welcome!

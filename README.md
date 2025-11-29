@@ -177,7 +177,7 @@ The case study follows a reproducible pipeline to convert PAT specifications to 
    - Visualize differences between CoAP-EAP and Lo-CoAP-EAP under varying attack conditions.
 
 ### Results and Findings
-The experimental results, detailed in ![CoAP-EAP vs. Lo-CoAP-EAP Protocol Details](experiment_results/comparison_results2.png), demonstrate:
+The experimental results, detailed in ![CoAP-EAP vs. Lo-CoAP-EAP Protocol Details](experiment_results/comparison_results2.png)
 - **Success Rates**: CoAP-EAP achieves higher success probabilities (e.g., 0.7273 baseline) compared to Lo-CoAP-EAP (e.g., 0.7672 with optimizations), but both degrade under increased vulnerability.
 - **Risk Assessment**: Risk values (e.g., [0.0, 0.0075, 0.0160, 0.0285, 0.0450, 0.0650] for Lo-CoAP-EAP) quantify adversarial impacts, showing Lo-CoAP-EAP's resilience to low-power constraints.
 - **Comparative Analysis**: Plots reveal trade-offs between energy efficiency and security, with Lo-CoAP-EAP maintaining acceptable performance up to p_vuln=0.06.

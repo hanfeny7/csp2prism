@@ -35,18 +35,17 @@ python -m pip install -r requirements.txt
 Optional: download PRISM (recommended version used in experiments: 4.9) and add it to your PATH.
 
 ## Quick Start
+Run the Web UI for interactive editing and conversion (recommended):
+```powershell
+cd webui
+python app.py
+Visit http://localhost:5000
+```
 
 Command-line conversion (example):
 ```powershell
 # Convert a PAT file to a PRISM model
 PYTHONPATH=pat2prism python -m src.pat2prism.cli -i examples/Lo_coap_eap.pat -o out/Lo_coap_eap.pm
-```
-
-Run the Web UI for interactive editing and conversion:
-```powershell
-cd webui
-python app.py
-Visit http://localhost:5000
 ```
 
 ## Usage Examples
@@ -70,12 +69,11 @@ Output: PRISM model file (*.prism) — default semantics: MDP
 
 ### Core Components
 
-- `src/pat2prism/pat_visitor.py` — AST visitor and IR builder
-- `src/pat2prism/ir.py` — IR definitions (Spec, ProcessModule, Transition)
-- `src/pat2prism/prism_generator_v2.py` — Template renderer that populates `prism_model.jinja2`
-- `src/pat2prism/templates/prism_model.jinja2` — PRISM model template (defaults to `mdp` header)
+- `pat2prism/pat_visitor.py` — AST visitor and IR builder
+- `pat2prism/ir.py` — IR definitions (Spec, ProcessModule, Transition)
+- `pat2prism/prism_generator_v2.py` — Template renderer that populates `prism_model.jinja2`
+- `pat2prism/templates/prism_model.jinja2` — PRISM model template (defaults to `mdp` header)
 - `webui/` — Flask-based interactive frontend
-- `tools/` — Batch scripts for experiments and example conversions
 
 ### Data Model
 
@@ -100,11 +98,11 @@ Unit tests for AST→IR and IR→template stages; integration tests validate tha
 - Create or modify Jinja2 templates for alternative PRISM encodings (DTMC, CTMC, or POMDP).
 
 ## Reproducibility and Experiments
-We provide a reproducible experiment pipeline used for the paper evaluation. Key artifacts are available under `paper/` and `experiment_results/`:
-- `paper/*.pm` — canonical PRISM models (MDP/DTMC variants)
-- `paper/prism_props_*.pctl` — property files used for verification
-- `paper/result_*.txt` — PRISM run logs (model-checking outputs)
-- `paper/plot_results.py`, `paper/plot_results_v2.py` — plotting scripts used to create figures
+We provide a reproducible experiment pipeline used for the paper evaluation. Key artifacts are available under `experiment_results/`:
+- `experiment_results/*.pm` — canonical PRISM models (MDP/DTMC variants)
+- `experiment_results/prism_props_*.pctl` — property files used for verification
+- `experiment_results/result_*.txt` — PRISM run logs (model-checking outputs)
+- `experiment_results/plot_results.py`, `paper/plot_results_v2.py` — plotting scripts used to create figures
 
 To reproduce a parameter sweep (example: varying implementation vulnerability probability `p_vuln`):
 1. Edit the model parameter in the PRISM model or create temporary model copies with different parameter values.
@@ -122,6 +120,9 @@ Automation note: `tools/` contains helper scripts for batch execution. If PRISM 
 - Web UI: model editor and statistics
    ![Web UI placeholder](experiment_results/docs/screenshots/webui_editor.png)
 
+- Web UI: user Manual & Help
+  ![Web UI placeholder](experiment_results/docs/screenshots/help.png)
+  
 - Example: generated PRISM model preview
    ![Model preview placeholder](experiment_results/docs/screenshots/model_preview.png)
 ## Case Study: CoAP-EAP vs. Lo-CoAP-EAP
@@ -129,7 +130,9 @@ Automation note: `tools/` contains helper scripts for batch execution. If PRISM 
 This section presents a case study from our paper demonstrating the PAT2PRISM tool's application in analyzing two protocol variants: CoAP-EAP and Lo-CoAP-EAP. These protocols model EAP authentication over CoAP, with Lo-CoAP-EAP incorporating additional low-power optimizations. The study evaluates security properties under adversarial conditions using probabilistic model checking.
 
 ### Protocol Overview
-For detailed protocol specifications, message flows, and state machines, refer to the PDF document: [CoAP-EAP vs. Lo-CoAP-EAP Protocol Details](coap-eap vs. lo_coap_eap.pdf). This document includes:
+Detailed protocol specifications, message flows, and state machines are shown in the figure:
+![Model placeholder](experiment_results/coap-eap_lo-coap-eap.png)
+This figure includes:
 - High-level protocol descriptions for both variants.
 - Message sequence diagrams.
 - State transition graphs.
@@ -155,7 +158,7 @@ The case study follows a reproducible pipeline to convert PAT specifications to 
    - Create variants like `lo_coap_eap_v0_02.pm` for parameter sweeps.
 
 4. **Property Specification**:
-   - Define PCTL properties in `paper/prism_props_mdp.pctl`, including:
+   - Define PCTL properties in `prism_props_mdp.pctl`, including:
      - Pmax=? [ F "success" ] (maximum success probability).
      - Rmax=? [ C<=deadline ] (maximum reward for timely completion).
      - Adversarial properties evaluating attack impacts.
@@ -163,28 +166,28 @@ The case study follows a reproducible pipeline to convert PAT specifications to 
 5. **Model Checking Execution**:
    - Run PRISM on model variants:
      ```powershell
-     prism paper/coap_eap.pm paper/prism_props_mdp.pctl > paper/result_std.txt
-     prism paper/lo_coap_eap_v0_02.pm paper/prism_props_mdp.pctl > paper/result_lo_v0_02.txt
+     prism coap_eap.pm prism_props_mdp.pctl > result_std.txt
+     prism lo_coap_eap_v0_02.pm prism_props_mdp.pctl > result_lo_v0_02.txt
      ```
    - Capture outputs for success rates, risk values, and reward metrics.
 
 6. **Result Analysis and Plotting**:
    - Aggregate results from multiple runs.
-   - Use `paper/plot_results.py` to generate comparative plots (e.g., success vs. vulnerability probability).
+   - Use `plot_results.py` to generate comparative plots (e.g., success vs. vulnerability probability).
    - Visualize differences between CoAP-EAP and Lo-CoAP-EAP under varying attack conditions.
 
 ### Results and Findings
-The experimental results, detailed in [CoAP-EAP vs. Lo-CoAP-EAP Protocol Details](coap-eap vs. lo_coap_eap.pdf), demonstrate:
+The experimental results, detailed in ![CoAP-EAP vs. Lo-CoAP-EAP Protocol Details](experiment_results/comparison_results2.png), demonstrate:
 - **Success Rates**: CoAP-EAP achieves higher success probabilities (e.g., 0.7273 baseline) compared to Lo-CoAP-EAP (e.g., 0.7672 with optimizations), but both degrade under increased vulnerability.
 - **Risk Assessment**: Risk values (e.g., [0.0, 0.0075, 0.0160, 0.0285, 0.0450, 0.0650] for Lo-CoAP-EAP) quantify adversarial impacts, showing Lo-CoAP-EAP's resilience to low-power constraints.
 - **Comparative Analysis**: Plots reveal trade-offs between energy efficiency and security, with Lo-CoAP-EAP maintaining acceptable performance up to p_vuln=0.06.
 - **Key Insights**: MDP semantics enable precise modeling of nondeterministic attacker choices, providing more convincing results for reviewer scrutiny than DTMC-only approaches.
 
-All raw PRISM outputs and derived result files (e.g., `paper/result_std.txt`, `paper/result_lo_*.txt`) are included for reproducibility. Reviewers can rerun experiments using the provided scripts and models.
+All raw PRISM outputs and derived result files (e.g., `result_std.txt`, `result_lo_*.txt`) are included for reproducibility. Reviewers can rerun experiments using the provided scripts and models.
 
 ## Contributing
 - Fork the repository and open a pull request with a clear description of changes.
-- Follow the code style and include tests for generator rule changes. See `CONTRIBUTING.md` if provided.
+- Follow the code style and include tests for generator rule changes. 
 
 ## License & Contact
 - This project is released under the MIT License — see `LICENSE`.

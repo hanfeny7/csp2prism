@@ -1,0 +1,67 @@
+// ===================================================
+// Generated PRISM MDP model (from pat2prism)
+// Processes, channels, and synchronization
+// ===================================================
+
+mdp
+
+// ===== Parameters =====
+const double p_flip = {{ opts.p_flip | default(0.02) }};
+const int MAX_NONCE = {{ opts.nonce_size | default(2) }};
+
+// ===== Message Encoding =====
+// Message indices for channel communication
+{%- for msg in msgs %}
+// {{ loop.index0 }} -> {{ msg }}
+{%- endfor %}
+
+// ===== Global Variables =====
+{% for ch in channels %}
+global chan_{{ ch.name }} : [0..{{ msgs|length - 1 }}] init 0;
+{% endfor %}
+{% for var_name, var_type in spec.variables.items() %}
+global {{ var_name }} : {{ var_type }};
+{% endfor %}
+
+// ===== Process Modules =====
+{%- for proc in processes %}
+
+module {{ proc.name }}
+  s : [0..{{ proc.states|length }}] init 0;
+
+  {% for trans in proc.transitions %}
+    {% set i = loop.index0 %}
+    // Transition {{ i }}: {{ trans.label }}
+    {% if trans.guard %}
+    [] s={{ trans.from_state }} & ({{ trans.guard.condition }}) ->
+    {% else %}
+    [] s={{ trans.from_state }} ->
+    {% endif %}
+    {% if trans.channel and trans.message %}
+      {% if 'send' in trans.label %}
+    (chan_{{ trans.channel }}' = {{ msgs_map[trans.message] | default(0) }}) & (s' = {{ trans.to_state }});
+      {% elif 'recv' in trans.label %}
+    (s' = {{ trans.to_state }}); // recv {{ trans.message }}
+      {% else %}
+    (s' = {{ trans.to_state }});
+      {% endif %}
+    {% elif trans.updates %}
+      {% for update in trans.updates %}
+    ({{ update.variable }}' = {{ update.expression }}) & (s' = {{ trans.to_state }});
+      {% endfor %}
+    {% else %}
+    (s' = {{ trans.to_state }});
+    {% endif %}
+
+    {% endfor %}
+
+  // Final state (self-loop)
+  [] s={{ proc.states|length }} -> (s' = {{ proc.states|length }});
+
+endmodule
+
+{%- endfor %}
+
+// ===== Labels (Observables) =====
+// Generic labels - customize for your protocol
+label "error" = false; // Update with protocol-specific error condition

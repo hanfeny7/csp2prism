@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PAT2PRISM Protocol Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7f7fa; margin: 0; }
+    .container { display: flex; flex-direction: row; height: 100vh; }
+    .panel { flex: 1; padding: 24px; box-sizing: border-box; }
+    .left { background: #fff; border-right: 1px solid #eee; }
+    .right { background: #f9f9ff; }
+    h2 { margin-top: 0; }
+    textarea {
+      width: 100%; height: 70vh; font-size: 15px; font-family: 'Fira Mono', 'Consolas', monospace;
+      border: 1px solid #ccc; border-radius: 6px; padding: 12px; background: #f6f6f8;
+      resize: vertical;
+    }
+    .actions { margin-top: 16px; }
+    button {
+      padding: 8px 24px; font-size: 16px; border-radius: 6px; border: none; background: #0057b8; color: #fff;
+      cursor: pointer; margin-right: 12px;
+    }
+    button:disabled { background: #aaa; }
+    .error { color: #c00; margin-top: 12px; }
+    .success { color: #080; margin-top: 12px; }
+    .code-block {
+      background: #fff; color: #222; font-family: 'Fira Mono', 'Consolas', monospace;
+      padding: 12px; border-radius: 6px; white-space: pre-wrap; min-height: 70vh;
+      overflow-x: auto; font-size: 15px;
+      border: 1px solid #ccc;
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .panel { height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel left">
+      <h2>PAT Code (Input)</h2>
+      <label for="patFontSize">Font size:</label>
+      <select id="patFontSize">
+        <option value="13">13px</option>
+        <option value="15" selected>15px</option>
+        <option value="18">18px</option>
+        <option value="21">21px</option>
+        <option value="24">24px</option>
+      </select>
+      <textarea id="patInput" placeholder="Paste your PAT code here..."></textarea>
+      <div class="actions">
+        <button id="convertBtn">Convert to PRISM</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+      <div id="errorMsg" class="error"></div>
+    </div>
+    <div class="panel right">
+      <h2>PRISM Code (Output)</h2>
+      <label for="prismFontSize">Font size:</label>
+      <select id="prismFontSize">
+        <option value="13">13px</option>
+        <option value="15" selected>15px</option>
+        <option value="18">18px</option>
+        <option value="21">21px</option>
+        <option value="24">24px</option>
+      </select>
+      <div id="prismOutput" class="code-block"></div>
+    </div>
+  </div>
+  <script>
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const patInput = document.getElementById('patInput');
+    const prismOutput = document.getElementById('prismOutput');
+    const errorMsg = document.getElementById('errorMsg');
+    const patFontSize = document.getElementById('patFontSize');
+    const prismFontSize = document.getElementById('prismFontSize');
+
+    patFontSize.addEventListener('change', function() {
+      patInput.style.fontSize = patFontSize.value + 'px';
+    });
+    prismFontSize.addEventListener('change', function() {
+      prismOutput.style.fontSize = prismFontSize.value + 'px';
+    });
+    // Set initial font sizes
+    patInput.style.fontSize = patFontSize.value + 'px';
+    prismOutput.style.fontSize = prismFontSize.value + 'px';
+
+    convertBtn.onclick = async function() {
+      errorMsg.textContent = '';
+      prismOutput.textContent = '';
+      convertBtn.disabled = true;
+      const patCode = patInput.value;
+      if (!patCode.trim()) {
+        errorMsg.textContent = 'Please enter PAT code.';
+        convertBtn.disabled = false;
+        return;
+      }
+      try {
+        const resp = await fetch('http://localhost:8000/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pat_code: patCode })
+        });
+        const data = await resp.json();
+        if (data.error) {
+          errorMsg.textContent = data.error;
+        } else {
+          prismOutput.textContent = data.prism_code;
+        }
+      } catch (e) {
+        errorMsg.textContent = 'Network error: ' + e;
+      }
+      convertBtn.disabled = false;
+    };
+    clearBtn.onclick = function() {
+      patInput.value = '';
+      prismOutput.textContent = '';
+      errorMsg.textContent = '';
+    };
+  </script>
+</body>
+</html>

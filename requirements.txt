@@ -1,0 +1,8 @@
+Flask>=2.0.0
+antlr4-python3-runtime>=4.9
+requests
+# If you use numpy, pandas, matplotlib for analysis or plotting, add:
+numpy
+pandas
+matplotlib
+# If you use any other package, add here
